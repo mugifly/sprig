@@ -1,29 +1,34 @@
-package Spring::Connector::Twitter;
+package Sprig::Connector::Twitter;
+# Sprig - Connector module for Twitter
 
+# Constructor
 sub new {
-	my $class = shift;
-	my $params = shift;
+	my ($class, %hash) = @_;
 	my $self = bless({}, $class);
 
+	# OAuth configuration
+	$self->{consumer_key} =		$hash{consumer_key} || die("Not specified consumer_key parameter");
+	$self->{consumer_secret} =	$hash{consumer_secret} || die("Not specified consumer_secret parameter");
+
 	# Database parameter
-	$self->{db} = $params->{db};
+	#$self->{core} = $hash->{core};
+	#$self->{db} = $hash->{db};
 	
 	return $self;
 }
 
-sub crawl {
+# Start the connector
+sub start {
+	my $self = shift;
+
+	# 
 
 }
 
-sub crawl_single_talk {
-	my ($message_id) = @_;
-
-	
-
-	$self->{db}->set(voice => undef => {
-		text => $text,
-		date => Time::Piece->new(),
-		before_voice_id = 
-	});
+# Handler for Realltime worker call
+sub rw_call {
+	my $self = shift;
 
 }
+
+1;

@@ -1,0 +1,12 @@
+% layout 'default';
+% title 'Configuration';
+<div class="row-fluid">
+	<h2>Configuration</h2>
+
+	<div class="row-fluid">
+		<div class="span6 well">
+			<h3> Twitter account</h3>
+			<a href="/session/oauth_redirect_twitter" class="btn btn-primary">Login with your Twitter bot account</a>
+		</div>
+	</div>
+</div>

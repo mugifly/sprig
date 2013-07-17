@@ -1,0 +1,6 @@
+% layout 'default';
+% title 'Welcome';
+<div class="hero-unit">
+	<h1>Sprig</h1><br>
+	<p>It's the petit bot, which sprouted from a sprig.</p>
+</div>
