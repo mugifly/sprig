@@ -1,6 +1,7 @@
 package Sprig;
 use Mojo::Base 'Mojolicious';
 
+use AnyEvent::Twitter::Stream;
 use Config::Pit qw//;
 use Data::Model;
 use Data::Model::Driver::MongoDB;
@@ -45,7 +46,7 @@ sub startup {
 
 	# Initialize core instance
 	my $core = Sprig::Core->new(
-		db => $db_schema,
+		db_ref => \$db_schema,
 		config => $conf,
 		#logger => $self->app->log,
 	);

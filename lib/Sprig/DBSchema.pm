@@ -27,6 +27,23 @@ column_sugar 'session.date' => int => {
 	},
 };
 
+column_sugar 'queue.detail' => int => {
+	inflate => sub { # DB -> Object
+		return JSON::decode_json($_[0]);
+	},
+	deflate => sub { # Object -> DB
+		ref( $_[0] ) && $_[0]->isa('Hash') ? JSON::encode_json($_[0]) : $_[0];
+	},
+};
+column_sugar 'queue.date' => int => {
+	inflate => sub { # DB -> Object
+		return Time::Piece->new($_[0]);
+	},
+	deflate => sub { # Object -> DB
+		ref( $_[0] ) && $_[0]->isa('Time::Piece') ? $_[0]->epoch : $_[0];
+	},
+};
+
 # Tables ##########
 
 # Social Account: social_account
@@ -68,8 +85,15 @@ install_model voice_tag => schema {
 # Table: queue
 install_model queue => schema {
 	key 'id';
-	column 'name';
-	column 'voice.id';
+	index 'type';
+	index 'priority';
+	column 'id';
+	column 'status'; # 0 = Wait (default), 1 = Running
+	column 'type'; # 'music'
+	column 'action'; # 'play', 'stop'
+	column 'detail'; # Detail data (JSON)
+	column 'priority'; # 0 = normal, ... ,1000 = High
+	column 'queue.date';
 };
 
 1;

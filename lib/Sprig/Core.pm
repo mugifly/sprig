@@ -3,6 +3,7 @@ package Sprig::Core;
 use AnyEvent;
 
 use Sprig::Connector::Twitter;
+use Sprig::Connector::Music;
 
 our $LOOP_INTERVAL_SEC = 5;
 
@@ -12,8 +13,10 @@ sub new {
 	my $self = bless({}, $class);
 
 	$self->{config} =	$hash{config} || die("Not specified config parameter");
-	$self->{db} = 	$hash{db} || die("Not specified db parameter");
+	$self->{db} = 	${$hash{db_ref}} || die("Not specified db_ref parameter");
 	$self->{logger} =	$hash{logger} || undef;
+
+	$self->{connector_instances} = {};
 
 	$self->init_connectors();
 
@@ -27,9 +30,16 @@ sub init_connectors {
 	my $conf = $self->{config};
 
 	# Twitter
-	$self->{connector_twitter} = Sprig::Connector::Twitter->new(
+	$self->{connector_instances}->{twitter} = Sprig::Connector::Twitter->new(
+		db_ref => \$self->{db},
 		consumer_key =>		$conf->{oauth_twitter_key},
 		consumer_secret =>	$conf->{oauth_twitter_secret},
+	);
+
+	# Music
+	$self->{connector_instances}->{music} = Sprig::Connector::Music->new(
+		db_ref => \$self->{db},
+		config => $self->{config},
 	);
 }
 
@@ -38,28 +48,24 @@ sub loop {
 	my $self = shift;
 	$self->_d("Sprig::Core::loop start...");
 
+	# Start loop in connectors
+	foreach(keys %{$self->{connector_instances}}){
+		$self->{connector_instances}->{$_}->loop_start();
+	}
+
+	# Start queue-processing loop timer
 	my $timer;
 	$timer = AE::timer(5, $LOOP_INTERVAL_SEC, sub {
-		$self->_d("Loop...");
-
-		eval {
-			$self->process_realtime_worker();
-		}; if (@$){
-			$self->_e(@$);
+		foreach(keys %{$self->{connector_instances}}){
+			eval {
+				$self->{connector_instances}->{$_}->queue_process();
+			}; if ($@){
+				$self->_e($@);
+			}
 		}
 
 		$timer; # Leep a scope of timer
 	});
-}
-
-# Process a realtime worker
-sub process_realtime_worker {
-	my $self = shift;
-
-	my $rows = $self->{db}->get( queue => { where => [ ] } );
-	while ( my $r = $row->next ){
-		
-	}
 }
 
 sub _e {
