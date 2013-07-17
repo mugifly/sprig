@@ -32,6 +32,24 @@
 							<li><a href="/config">Config</a></li>
 						% }
 					</ul>
+					<ul class="nav pull-right">
+						<li class="dropdown">
+						% if ( defined $self->stash('ownSession') ){
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-user"></i> Logged-in <b class="caret"></b></a>
+								<ul class="dropdown-menu">
+								<li class="nav-header">Authorization</li>
+								<li><a href="/session/logout">&nbsp;Logout</a></li>
+								</ul>
+							</li>
+						% } else {
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown">Login <b class="caret"></b></a>
+								<ul class="dropdown-menu">
+								<li class="nav-header">Authorization With Twitter</li>
+								<li><a href="/session/oauth_twitter_redirect"><i class="icon-user"></i>&nbsp;Login (for your <u>bot</u> account)</a></li>
+								</ul>
+							</li>
+						% }
+					</ul>
 				</div><!--/.nav-collapse -->
 			</div>
 		</div>

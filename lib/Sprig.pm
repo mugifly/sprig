@@ -5,6 +5,7 @@ use Config::Pit qw//;
 use Data::Model;
 use Data::Model::Driver::MongoDB;
 use Net::Twitter::Lite;
+use Time::Piece;
 
 use Sprig::Core;
 use Sprig::DBSchema;
@@ -20,6 +21,11 @@ sub startup {
 	my $conf_secret = Config::Pit::get("sprig");
 	my %conf_ = (%$conf, %$conf_secret); # Combine it
 	$conf = \%conf_;
+	$self->helper(config => sub { return $conf; });
+
+	# Set session configurations
+	$self->app->sessions->cookie_name( $conf->{session_name} || 'sprig_session' );
+	$self->secret( $conf->{session_secret} || 'sprig_session_secret' );
 
 	# Initialize a database
 	my $mongo = Data::Model::Driver::MongoDB->new( 
@@ -35,6 +41,7 @@ sub startup {
 	my $db_schema = Sprig::DBSchema->new;
 	$db_schema->set_base_driver($mongo);
 	$self->attr(db => sub { return $db_schema; });
+	$self->helper(db => sub { return $self->app->db; });
 
 	# Initialize core instance
 	my $core = Sprig::Core->new(
@@ -46,6 +53,7 @@ sub startup {
 
 	# Initialize a router
 	my $r = $self->routes;
+	$r = $r->namespaces(['Sprig::Controller']);
 
 	# Bridge
 	$r = $r->bridge->to('bridge#pre_process');
@@ -53,6 +61,11 @@ sub startup {
 	# Normal route to controller
   	$r->get('/')->to('main#top');
   	$r->get('/config')->to('main#config');
+  	$r->route('/session/oauth_twitter_redirect')->to('session#oauth_twitter_redirect');
+  	$r->route('/session/oauth_twitter_callback')->to('session#oauth_twitter_callback');
+  	$r->route('/session/logout')->to('session#logout');
+
+  	$r->get
 }
 
 1;

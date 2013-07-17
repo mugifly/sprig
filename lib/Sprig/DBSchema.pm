@@ -18,6 +18,15 @@ column_sugar 'voice.date' => int => {
 	},
 };
 
+column_sugar 'session.date' => int => {
+	inflate => sub { # DB -> Object
+		return Time::Piece->new($_[0]);
+	},
+	deflate => sub { # Object -> DB
+		ref( $_[0] ) && $_[0]->isa('Time::Piece') ? $_[0]->epoch : $_[0];
+	},
+};
+
 # Tables ##########
 
 # Social Account: social_account
@@ -25,6 +34,7 @@ install_model social_account => schema {
 	key 'id';
 	column 'social_id';
 	column 'social_token';
+	column 'social_secret_token';
 	column 'social_refresh_token';
 	column 'social_service';
 };
@@ -33,7 +43,9 @@ install_model social_account => schema {
 install_model session => schema {
 	key 'id';
 	index 'token';
+	column 'id';
 	column 'token';
+	column 'session.date';
 };
 
 # Table: voice

@@ -5,8 +5,17 @@
 
 	<div class="row-fluid">
 		<div class="span6 well">
-			<h3> Twitter account</h3>
-			<a href="/session/oauth_redirect_twitter" class="btn btn-primary">Login with your Twitter bot account</a>
+			<h3> Social accounts (bot)</h3>
+			<table class="table table-striped">
+				<tr>
+					<th>Service</th> <th>User id</th> <th>mongo id</th>
+				</tr>
+				% foreach( @{$social_accounts} ) {
+					<tr>
+						<td><%= $_->{social_service} %></td> <td><%= $_->{social_id} %></td> <td><%= $_->{id} %></td>
+					</tr>
+				% }
+			</table>
 		</div>
 	</div>
 </div>
