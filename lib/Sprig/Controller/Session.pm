@@ -1,6 +1,8 @@
 package Sprig::Controller::Session;
 use Mojo::Base 'Mojolicious::Controller';
 
+use Data::Dumper;
+
 sub oauth_twitter_redirect {
 	my $self = shift;
 	
@@ -48,9 +50,10 @@ sub oauth_twitter_callback {
 		}
 
 		# Generate a token
-		my $origin_token = Mojo::Util::sha1_sum( time() + "." + rand(999999999) + "." + + $user_id );
+		my $origin_token = Mojo::Util::sha1_sum( time() . "." . rand(999999999) . "." . $user_id );
 
 		# Save to database
+		warn $user_id;
 		my $r = $self->db->get( social_account => { where => [ social_id => $user_id ] } )->next;
 		if($self->stash('is_initial') eq 0 && (!defined $r || $r->social_id ne $user_id )){
 			# Limit a single social-account
@@ -68,7 +71,7 @@ sub oauth_twitter_callback {
 		if($self->stash('is_initial') eq 1){
 			# Save a social-account to database
 			$self->db->set( social_account => undef => {
-				social_id =>			$user_id,
+				social_id =>			"$user_id",
 				social_service =>	'twitter',
 				social_token =>		$access_token,
 				social_secret_token =>		$access_token_secret,

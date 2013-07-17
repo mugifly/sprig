@@ -18,9 +18,10 @@ sub pre_process {
 	# Check exist a account
 	my $acc = $self->app->db->get( social_account =>  { where => [] })->next;
 	if (!defined $acc){ # Never a one
-		$self->stash("is_initial", 1);
+		$self->stash('is_initial', 1);
+		$self->stash('alert', 'First, please login with bot account.')
 	} else {
-		$self->stash("is_initial", 0);
+		$self->stash('is_initial', 0);
 	}
 
 	# Check a session
