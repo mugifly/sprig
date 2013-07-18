@@ -1,11 +1,36 @@
 % layout 'default';
 % title 'Configuration';
-<div class="row-fluid">
+<script type="text/javascript">
+	function QueueListCtrl($scope, $http, $timeout) {
+		$scope.getList = function(){
+			$http.get('?req=json&target=queues')
+			.success( function( data ){
+				$scope.queues = data.queues;
+			});
+
+			$timeout( function(){
+				$scope.getList();
+			} ,1000);
+		};
+
+		$scope.getList();
+	}
+
+	function QueueCtrl($scope, $http) {
+		$scope.addQueue = function(type, action, priority, source, url){
+			$http.get('?req=json&target=queue&mode=add&type='+type+'&action='+action+'&priority='+priority+'&source='+source+'&url='+url)
+			.success( function( data ){
+				window.alert(data.result);
+			});
+		};
+	}
+</script>
+<div class="row-fluid" ng-app>
 	<h2>Configuration</h2>
 
 	<div class="row-fluid">
 		<div class="span6 well">
-			<h3> Social accounts (bot)</h3>
+			<h3>Social accounts (bot)</h3>
 			<table class="table table-striped">
 				<tr>
 					<th>Service</th> <th>User id</th> <th>mongo id</th>
@@ -16,6 +41,37 @@
 					</tr>
 				% }
 			</table>
+		</div>
+
+		<div class="span6 well" ng-controller="QueueListCtrl">
+			<h3>Queues</h3>
+			<table class="table table-striped">
+				<tr>
+					<th>Type</th> <th>Action</th> <th>Sta.</th> <th>Pri.</th> <th>Date</th>
+				</tr>
+				<tr ng-repeat="item in queues">
+					<td>{{item.type}}</td> <td>{{item.action}}</td> <td>{{item.status}}</td> <td>{{item.priority}}</td> <td>{{item.date}}</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	<div class="row-fluid">
+		<div class="span6 well">
+			<h3>Queue control</h3>
+			<div>
+				<h5>play_music with YouTube (Fairuse ONLY)</h5>
+				<form ng-submit="addQueue('music', 'play', '1', 'youtube', url);url = '';" ng-controller="QueueCtrl">
+					<div class="input-append">
+						<input type="text" ng-model="url" placeholder="URL">
+						<input type="submit" class="btn" value="Add">
+					</div>
+				</form>
+
+				<h5>stop_music</h5>
+				<form ng-submit="addQueue('music', 'stop', '1000', '', '');url = '';" ng-controller="QueueCtrl">
+					<input type="submit" class="btn" value="Add">
+				</form>
+			</div>
 		</div>
 	</div>
 </div>
