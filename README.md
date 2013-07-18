@@ -8,6 +8,13 @@ It's the petit bot, which sprouted from sprig.
 
 ## License of third-party libraries
 
+### AngularJS - v1.0.7
+http://angularjs.org/
+
+	 (c) 2010-2012 Google, Inc. http://angularjs.org
+ 	MIT License
+	
+
 ### Data::Model::Driver::MongoDB
 https://github.com/ytnobody/Data-Model-Driver-MongoDB/
 
