@@ -60,7 +60,7 @@ sub queue_process {
 
 	my $rows = $self->{db}->get( queue => { order => { priority => -1 } } );
 	while ( my $r = $rows->next ){
-		if($r->type ne 'music'){ continue; }
+		if($r->type ne 'music'){ next; }
 
 		if($r->action eq 'play' && defined $r->detail){
 			$self->_d("music_play");
