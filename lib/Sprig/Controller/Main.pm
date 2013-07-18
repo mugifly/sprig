@@ -35,7 +35,7 @@ sub config {
 					status => 0,
 				});
 				return;
-			} elsif ($self->param('action') eq '') {
+			} elsif ($self->param('action') eq 'stop') {
 				$self->db->set( queue => undef => {
 					type => $self->param('type'),
 					action => $self->param('action'),
