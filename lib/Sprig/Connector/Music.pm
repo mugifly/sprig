@@ -6,6 +6,7 @@ our @Listeners = ();
 use Data::Dumper;
 use FindBin;
 use WWW::YouTube::Download;
+use Parallel::ForkManager;
 
 use base qw/Sprig::Connector::Base/;
 
@@ -55,6 +56,8 @@ sub queue_process {
 
 	warn $process_num;
 
+	my $pm = new Parallel::ForkManager(1);
+
 	my $rows = $self->{db}->get( queue => { order => { priority => -1 } } );
 	while ( my $r = $rows->next ){
 		if($r->type ne 'music'){ continue; }
@@ -82,17 +85,25 @@ sub queue_process {
 					$self->{playing_queue_id} = $r->id;
 
 					my $f_path = $self->{path_save_dir}.$r->detail->{source_id}.'.flv';
-					eval {
-						open my $PLAYER, "-|", "$bin_path $f_path" || die "can't fork player: $!";
-						$self->{playing_process} = $PLAYER;
-					}; if ($@){
-						warn "[ERROR] ".$@;
-					}
 
+					# Fork a process 
+					my $pid;
+    					$pid = $pm->start;
+
+    					if($pid eq 0){
+						eval {
+							open my $PLAYER, "-|", "$bin_path $f_path" || die "can't fork player: $!";
+							$self->{playing_process} = $PLAYER;
+							close($PLAYER);
+						}; if ($@){
+							warn "[ERROR] ".$@;
+						}
+					}
 					
 					$h->{play_status} = 2;
 					$r->detail($h);
 					$r->update();
+					warn "[Music] Updated";
 				} elsif($r->detail->{play_status} eq 0 ){
 					# Fetch
 					$self->_d("[Music] youtube fetch ... ". $r->detail->{source_id});

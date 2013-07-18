@@ -17,8 +17,8 @@
 	}
 
 	function QueueCtrl($scope, $http) {
-		$scope.addQueue = function(type, action, priority, source, url){
-			$http.get('?req=json&target=queue&mode=add&type='+type+'&action='+action+'&priority='+priority+'&source='+source+'&url='+url)
+		$scope.addQueue = function(type, action, priority, url){
+			$http.get('?req=json&target=queue&mode=add&type='+type+'&action='+action+'&priority='+priority+'&url='+  encodeURIComponent(url))
 			.success( function( data ){
 				window.alert(data.result);
 			});
@@ -60,7 +60,7 @@
 			<h3>Queue control</h3>
 			<div>
 				<h5>play_music with YouTube (Fairuse ONLY)</h5>
-				<form ng-submit="addQueue('music', 'play', '1', 'youtube', url);url = '';" ng-controller="QueueCtrl">
+				<form ng-submit="addQueue('music', 'play', '1', url);url = '';" ng-controller="QueueCtrl">
 					<div class="input-append">
 						<input type="text" ng-model="url" placeholder="URL">
 						<input type="submit" class="btn" value="Add">
@@ -68,7 +68,7 @@
 				</form>
 
 				<h5>stop_music</h5>
-				<form ng-submit="addQueue('music', 'stop', '1000', '', '');url = '';" ng-controller="QueueCtrl">
+				<form ng-submit="addQueue('music', 'stop', '1000', '');url = '';" ng-controller="QueueCtrl">
 					<input type="submit" class="btn" value="Add">
 				</form>
 			</div>

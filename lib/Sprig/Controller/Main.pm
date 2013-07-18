@@ -22,8 +22,8 @@ sub config {
 		# Queue - Add
 		if($self->param('type') eq 'music'){
 			# Music queue
-			if($self->param('action') eq 'play' && $self->param('source') eq 'youtube' && $self->param('url') =~ /(http|https):\/\/(www\.|)youtube\.com\/watch\?v=(\w+)(|&.*)$/) {
-				# Music (youtube) play
+			if($self->param('action') eq 'play' && Mojo::Util::url_unescape($self->param('url')) =~ /(http|https):\/\/(www\.|)youtube\.com\/watch\?v=(\w+)(|&.*)$/) {
+				# Play from YouTube
 				$self->db->set( queue => undef => {
 					type => $self->param('type'),
 					action => $self->param('action'),
@@ -34,6 +34,7 @@ sub config {
 					},
 					status => 0,
 				});
+				$self->render( json => { result => "Done" });
 				return;
 			} elsif ($self->param('action') eq 'stop') {
 				$self->db->set( queue => undef => {
@@ -43,6 +44,7 @@ sub config {
 					date => Time::Piece->new(),
 					status => 0,
 				});
+				$self->render( json => { result => "Done" });
 				return;
 			}
 		} 
