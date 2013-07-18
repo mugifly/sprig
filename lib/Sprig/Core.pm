@@ -13,9 +13,25 @@ sub new {
 	my $self = bless({}, $class);
 
 	$self->{config} =	$hash{config} || die("Not specified config parameter");
-	$self->{db} = 	${$hash{db_ref}} || die("Not specified db_ref parameter");
 	$self->{logger} =	$hash{logger} || undef;
 
+	# Initialize a database
+	my $mongo = Data::Model::Driver::MongoDB->new( 
+		host => $self->{config}->{db_mongodb_host} || 'localhost',
+		port => $self->{config}->{db_mongodb_port} || '27017',
+		db => $self->{config}->{db_mongodb_name} || 'sprig',
+		timeout => $self->{config}->{db_mongodb_timeout} || 20000,
+		query_timeout => $self->{config}->{db_mongodb_query_timeout} || 30000,
+		auto_connect => 1, auto_reconnect => 1,
+	);
+
+	# Initialize the O/R mapper
+	my $db_schema = Sprig::DBSchema->new;
+	$db_schema->set_base_driver($mongo);
+
+	$self->{db} = 	$db_schema;
+
+	# Initialize connectors
 	$self->{connector_instances} = {};
 
 	$self->init_connectors();

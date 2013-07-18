@@ -94,7 +94,7 @@ sub queue_process {
 						eval {
 							open my $PLAYER, "-|", "$bin_path $f_path" || die "can't fork player: $!";
 							$self->{playing_process} = $PLAYER;
-							close($PLAYER);
+							$pm->finish;
 						}; if ($@){
 							warn "[ERROR] ".$@;
 						}
