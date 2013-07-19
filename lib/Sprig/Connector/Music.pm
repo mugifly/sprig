@@ -6,6 +6,7 @@ our @Listeners = ();
 use Data::Dumper;
 use FindBin;
 use WWW::YouTube::Download;
+use FLV::ToMP3;
 use Parallel::ForkManager;
 
 use base qw/Sprig::Connector::Base/;
@@ -63,61 +64,52 @@ sub queue_process {
 		if($r->type ne 'music'){ next; }
 
 		if($r->action eq 'play' && defined $r->detail){
-			$self->_d("music_play");
+			$self->_d("[Music] music_play");
 
-			if($r->detail->{play_status} eq 2 && $is_playing eq 0){
-				# Playing end
-				$self->_d("music_play complete");
-				$r->delete(); # Delete from queue
+			if(defined $r->detail->{uri} && $r->detail->{play_status} eq 1 && $is_playing eq 0){ # Ready and Nothing playing
+				# Start playing
+				$self->_d("[Music] Start playing: ". $r->detail->{uri} );
+				$self->{playing_queue_id} = $r->id;
 
-				if(-f $self->{path_save_dir}.$r->detail->{source_id}.'.flv'){
-					unlink($self->{path_save_dir}.$r->detail->{source_id}.'.flv');
-				}
+				# Fork a process 
+				my $pid;
+				$pid = $pm->start;
 
-				last;
-
-			} elsif($r->detail->{source} eq 'youtube' && defined $r->detail->{source_id}){
-				# Play from YouTube (for Fair use ONLY !)
-				warn "Status: ".$r->detail->{play_status};
-				if($r->detail->{play_status} eq 1){
-					# Play
-					$self->_d("[Music] play fetched file ... ". $r->detail->{source_id});
-					$self->{playing_queue_id} = $r->id;
-
-					my $f_path = $self->{path_save_dir}.$r->detail->{source_id}.'.flv';
-
-					# Fork a process 
-					my $pid;
-    					$pid = $pm->start;
-
-    					if($pid eq 0){
-						eval {
-							open my $PLAYER, "-|", "$bin_path $f_path" || die "can't fork player: $!";
-							$self->{playing_process} = $PLAYER;
-							$pm->finish;
-						}; if ($@){
-							warn "[ERROR] ".$@;
-						}
+				if($pid eq 0){
+					eval {
+						open my $PLAYER, "-|", "$bin_path $f_path" || die "can't fork player: $!";
+					$self->{playing_process} = $PLAYER;
+						$pm->finish;
+					}; if ($@){
+						warn "[ERROR] ".$@;
 					}
-					
-					$h->{play_status} = 2;
-					$r->detail($h);
-					$r->update();
-					warn "[Music] Updated";
-				} elsif($r->detail->{play_status} eq 0 ){
-					# Fetch
-					$self->_d("[Music] youtube fetch ... ". $r->detail->{source_id});
-					my $h = $r->detail;
-					unless(-f $self->{path_save_dir}.$r->detail->{source_id}.'.flv'){						
-						my $c = WWW::YouTube::Download->new;
-						$c->download($r->detail->{source_id}, {
-							filename => $self->{path_save_dir}.$r->detail->{source_id}.'.flv'
-						});
-					}
-					$h->{play_status} = 1;
-					$r->detail($h);
-					$r->update();
 				}
+				
+				# Change a play_status
+				$h->{play_status} = 2;
+				$r->detail($h);
+				$r->update();
+			} elsif($r->detail->{play_status} eq 0){ # Not already fetched
+				if( $r->detail->{source} eq 'youtube' && defined $r->detail->{source_id} ){
+					# Fetch from YouTube (for Fair use ONLY !)
+					$self->_d("[Music] Start fetching (YouTube):  ". $r->detail->{source_id});
+
+					my $detail = $r->detail;
+					my $save_path =  $self->{path_save_dir} . $detail->{source_id};
+
+					$self->fetch_youtube( $detail->{source_id}, $save_path, sub {
+						# Fetch complete
+						$self->_d("[Music] Fetch complete  ". $r->detail->{source_id});
+						$detail->{play_status} = 1;
+						$detail->{uri} = 'file://'. $save_path.'.mp3';
+						$r->detail($h);
+						$r->update();
+					});
+				}
+			} else {
+				# End or Invalid queue
+				$self->_d("[Music] Delete queue");
+				$r->delete();
 			}
 
 			last;
@@ -139,6 +131,29 @@ sub queue_process {
 	}
 
 	return;
+}
+
+sub fetch_youtube {
+	my ($self, $source_id, $save_path ,$func_on_complete) = @_;
+
+	if(-f $save_path.'.flv'){
+		$func_on_complete;
+		return;
+	} else {
+		my @coro = ();
+		push(@coro, async {
+			my $client = WWW::YouTube::Download->new;
+			$client->download($source_id, {
+				filename => $save_path.'.flv',
+			});
+			my $converter = FLV::ToMP3->new();
+	           $converter->parse_flv( $save_path.'.flv' );
+	           $converter->save( $save_path.'.mp3' );
+			$func_on_complete;
+		});
+
+		$coro[0]->join;
+	}
 }
 
 1;

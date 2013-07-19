@@ -24,11 +24,11 @@ sub new {
 		query_timeout => $self->{config}->{db_mongodb_query_timeout} || 30000,
 		auto_connect => 1, auto_reconnect => 1,
 	);
-
+	
 	# Initialize the O/R mapper
 	my $db_schema = Sprig::DBSchema->new;
 	$db_schema->set_base_driver($mongo);
-
+	
 	$self->{db} = 	$db_schema;
 
 	# Initialize connectors
