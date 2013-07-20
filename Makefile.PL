@@ -21,7 +21,8 @@ WriteMakefile(
 	'WWW::YouTube::Download' => 0,
 	'FLV::ToMP3' => 0,
 	'Net::OAuth' => 0.25,
-
+	'Audio::Play::MPG123' => 0,
+	'FFmpeg::Command' => 0,
   },
   test      => {TESTS => 't/*.t'}
 );

@@ -47,10 +47,10 @@
 			<h3>Queues</h3>
 			<table class="table table-striped">
 				<tr>
-					<th>Type</th> <th>Action</th> <th>Sta.</th> <th>Pri.</th> <th>Date</th>
+					<th>Type</th> <th>Action</th> <th>Sta.</th> <th>Pri.</th> <th>Date</th><th>Detail</th>
 				</tr>
 				<tr ng-repeat="item in queues">
-					<td>{{item.type}}</td> <td>{{item.action}}</td> <td>{{item.status}}</td> <td>{{item.priority}}</td> <td>{{item.date}}</td>
+					<td>{{item.type}}</td> <td>{{item.action}}</td> <td>{{item.status}}</td> <td>{{item.priority}}</td> <td>{{item.date}}</td> <td>{{item.detail}}</td>
 				</tr>
 			</table>
 		</div>
