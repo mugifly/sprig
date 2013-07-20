@@ -36,6 +36,9 @@ sub new {
 
 	$self->init_connectors();
 
+	# Cleaning a queue
+	$self->queue_clean();
+
 	return $self;
 }
 
@@ -82,6 +85,22 @@ sub loop {
 
 		$timer; # Leep a scope of timer
 	});
+}
+
+# Cleaning a queue
+sub queue_clean {
+	my $self = shift;
+
+	my $now = Time::Piece->new();
+	my $expire_sec = 60 * 5; # 60 sec * 5 = 5min
+
+	my $rows = $self->{db}->get( queue => {} );
+	while ( my $r = $rows->next ) {
+		if(!defined $r->date || $expire_sec < $now - $r->date){
+			$self->_d("Delete old queue: ". $r->id);
+			$r->delete();
+		}
+	}
 }
 
 sub _e {

@@ -28,8 +28,14 @@ sub new {
 		mkdir($self->{path_save_dir}) || die("Can't make directory:".$self->{path_save_dir});
 	}
 
+	$self->{NUM_MAX_FETCH} = $self->{config}->{music_num_max_fetch} || 2; # Num of fetching at same time 
+	$self->{CACHE_EXPIRE} = $self->{config}->{music_cache_expire_sec} || 60 * 60 * 12; # 60 sec * 60 min * 12 hour
+
 	# Database parameter
 	$self->{db} = ${$hash{db_ref}} || die("Not specified db_ref parameter");
+
+	# Clean tmpdir
+	$self->clean_tmp();
 	
 	return $self;
 }
@@ -63,7 +69,7 @@ sub queue_process {
 		if($r->action eq 'play' && defined $r->detail){
 			$self->_d("[Music] play");
 
-			if(defined $r->detail && $r->detail->{play_status} eq 0){ # Not already fetched
+			if(defined $r->detail && $r->detail->{play_status} eq 0 && $self->get_fetching_queue_num() <= $self->{NUM_MAX_FETCH} ){ # Not already fetched
 				# Fetch
 				if( $r->detail->{source} eq 'youtube' && defined $r->detail->{source_id} ){
 					# Fetch from YouTube (for Fair use ONLY !)
@@ -216,6 +222,26 @@ sub queue_process {
 	return;
 }
 
+sub get_fetching_queue_num {
+	my $self = shift;
+	my @ids = $self->get_fetching_queue_ids();
+	my $num = "@ids";
+	return $num;
+}
+
+sub get_fetching_queue_ids {
+	my $self = shift;
+	my @ids = ();
+	my $rows = $self->{db}->get( queue => { where => [ type => 'music', action => 'play' ] } );
+	while ( my $r = $rows->next ){
+		my $detail = $r->detail;
+		if(defined $detail->{play_status} && $detail->{play_status} == 2){
+			push(@ids, $r->id);
+		}
+	}
+	return @ids;
+}
+
 sub get_playing_queue {
 	my $self = shift;
 	my $rows = $self->{db}->get( queue => { where => [ type => 'music', action => 'play' ] } );
@@ -227,7 +253,6 @@ sub get_playing_queue {
 	}
 	return undef;
 }
-
 
 sub is_playing {
 	my $self = shift;
@@ -277,6 +302,30 @@ sub fetch_youtube {
 			}
 		}
 	}
+}
+
+sub clean_tmp {
+	my $self = shift;
+	$self->_d("[Music] clean_tmp");
+
+	my $now = time();
+	my $expire_sec = $self->{CACHE_EXPIRE};
+
+	opendir(DIRH, $self->{path_save_dir});
+	foreach(readdir(DIRH)){
+		next if /^\.{1,2}$/;
+		my $name = $_;
+		eval{
+			my $up_date = (stat($self->{path_save_dir}.$name))[9];
+			if(!defined $up_date || $expire_sec <= $now - $up_date){
+				$self->_e("[Music] Cleaning: ".$name);
+				unlink($self->{path_save_dir}.$name);
+			}
+		}; if($@){
+			$self->_e("[Music] Cleaning error: ".$name);
+		}
+	}
+	closedir(DIRH);
 }
 
 1;
