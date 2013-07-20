@@ -78,8 +78,8 @@ sub queue_process {
 					$r->update();
 
 					# Start fetch
-					eval{
-						$self->fetch_youtube( $r->id, $detail->{source_id}, $save_path, sub {
+					$self->fetch_youtube( $r->id, $detail->{source_id}, $save_path,
+						 sub {
 							# On fetch complete
 							my ($self, $queue_id, $source_id, $save_path) = @_;
 							$self->_d("[Music] Fetch complete  ". $source_id);
@@ -91,11 +91,17 @@ sub queue_process {
 							$detail->{uri} = 'file://'. $save_path.'.mp3';
 							$row->detail($detail);
 							$row->update();
-						});
-					}; if($@){
-						$self->_e("[Music] Fetch error ". $source_id);
-						$r->delete();
-					}
+						},
+						sub {
+							# On error
+							my ($self, $queue_id, $source_id) = @_;
+							$self->_e("[Music] Error  ". $source_id);
+							# Update queue, change a play_status to Ready
+							$self->_e("[Music] Delete queue  ". $queue_id);
+							my $row = $self->{db}->lookup( queue => $queue_id );
+							$row->delete();
+						}
+					);
 				}
 
 				last;
@@ -107,7 +113,7 @@ sub queue_process {
 			} elsif(defined $r->detail->{uri} && $r->detail->{play_status} eq 2){ # Ready
 				if($self->is_playing()){ # If now playing for other queue.
 					$self->_d("[Music] Ready: ". $r->detail->{uri} );
-					continue;
+					next;
 				}
 
 				# Play
@@ -236,7 +242,7 @@ sub is_playing {
 }
 
 sub fetch_youtube {
-	my ($self, $queue_id, $source_id, $save_path ,$func_callback) = @_;
+	my ($self, $queue_id, $source_id, $save_path ,$func_callback, $func_error) = @_;
 
 	if(-f $save_path.'.mp3'){
 		$self->_d("[Music] fetch_youtube - Already fetch & converted:  ". $source_id);
@@ -260,11 +266,14 @@ sub fetch_youtube {
 				$ff->output_file( $save_path.'.mp3' );
 				$ff->exec();
 
+				unlink( $save_path.'.flv' );
+
 				&$func_callback($self, $queue_id, $source_id, $save_path);
 
 				$pm->finish;
 			}; if ($@){
 				warn "[ERROR] ".$@;
+				&$func_error($self, $queue_id, $source_id);
 			}
 		}
 	}
