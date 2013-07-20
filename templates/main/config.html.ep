@@ -69,7 +69,10 @@
 
 				<h5>stop_music</h5>
 				<form ng-submit="addQueue('music', 'stop', '1000', '');url = '';" ng-controller="QueueCtrl">
-					<input type="submit" class="btn" value="Add">
+					<input type="submit" class="btn" value="Stop all">
+				</form>
+				<form ng-submit="addQueue('music', 'skip', '1000', '');url = '';" ng-controller="QueueCtrl">
+					<input type="submit" class="btn" value="Skip">
 				</form>
 			</div>
 		</div>

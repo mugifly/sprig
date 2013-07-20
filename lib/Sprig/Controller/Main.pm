@@ -36,7 +36,7 @@ sub config {
 				});
 				$self->render( json => { result => "Done" });
 				return;
-			} elsif ($self->param('action') eq 'stop') {
+			} elsif ($self->param('action') eq 'stop' || $self->param('action') eq 'skip') {
 				$self->db->set( queue => undef => {
 					type => $self->param('type'),
 					action => $self->param('action'),
