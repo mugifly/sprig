@@ -26,7 +26,7 @@ sub startup {
 
 	# Set session configurations
 	$self->app->sessions->cookie_name( $conf->{session_name} || 'sprig_session' );
-	$self->secret( $conf->{session_secret} || 'sprig_session_secret' );
+	$self->app->secrets([ $conf->{session_secret} || 'sprig_session_secret' ]);
 
 	# Initialize a database
 	my $mongo = Data::Model::Driver::MongoDB->new( 
@@ -65,8 +65,6 @@ sub startup {
   	$r->route('/session/oauth_twitter_redirect')->to('session#oauth_twitter_redirect');
   	$r->route('/session/oauth_twitter_callback')->to('session#oauth_twitter_callback');
   	$r->route('/session/logout')->to('session#logout');
-
-  	$r->get
 }
 
 1;

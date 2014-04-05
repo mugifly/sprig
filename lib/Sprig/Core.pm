@@ -73,8 +73,7 @@ sub loop {
 	}
 
 	# Start queue-processing loop timer
-	my $timer;
-	$timer = AE::timer(5, $LOOP_INTERVAL_SEC, sub {
+	Mojo::IOLoop->recurring( 5 => sub {
 		foreach(keys %{$self->{connector_instances}}){
 			eval {
 				$self->{connector_instances}->{$_}->queue_process();
@@ -82,8 +81,6 @@ sub loop {
 				$self->_e($@);
 			}
 		}
-
-		$timer; # Leep a scope of timer
 	});
 }
 

@@ -53,7 +53,7 @@ sub queue_process {
 	my $self = shift;
 	$self->_d("Sprig::Connector::Music - queue_process...");
 
-	my $bin_path = $self->{path_music_player_bin};
+	my $bin_path = $self->{path_music_player_bin} || 'mplayer';
 
 	# Queue item - detail->{play_status}
 	# 0: Not already fetched

@@ -15,3 +15,4 @@ requires 'FLV::ToMP3', 0;
 requires 'Net::OAuth', 0;
 requires 'Audio::Play::MPG123', 0;
 requires 'FFmpeg::Command', 0;
+requires 'Parallel::ForkManager', 0;
