@@ -3,6 +3,7 @@ log/
 blib/
 .build/
 _build/
+local/
 cover_db/
 inc/
 Build
